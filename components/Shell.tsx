@@ -11,7 +11,7 @@ const rnd = () => Math.random().toString(36).slice(2, 7).toUpperCase();
 
 type Item = {
   label: string;
-  cat: ("aura" | "soft" | "mesh" | "dark" | "pastel")[];
+  cat: ("glass" | "soft" | "mesh" | "dark" | "pastel")[];
   rating: string;
   year: string;
   p: GenParams;
@@ -19,8 +19,8 @@ type Item = {
 
 // Showcase set — drawn from the palette library, tagged for the chip filter.
 const SHOW: Item[] = [
-  { label: "Aura Bloom",   cat: ["aura", "dark"],  rating: "9.4", year: "4K", p: { seed: "REF4", styleId: "aura",        paletteId: "aura-bloom",     keywords: "cosmic core",   text: "", intensity: 0.92, grainOn: true } },
-  { label: "Neon Fuchsia", cat: ["aura", "dark"],  rating: "9.1", year: "4K", p: { seed: "NF2",  styleId: "aura",        paletteId: "neon-fuchsia",   keywords: "night glow",    text: "", intensity: 0.9,  grainOn: true } },
+  { label: "Reeded Glacier",cat: ["glass", "dark"], rating: "9.4", year: "4K", p: { seed: "FLT2", styleId: "fluted",      paletteId: "glacier",        keywords: "soft light",    text: "", intensity: 0.6,  grainOn: false } },
+  { label: "Ultraviolet",  cat: ["glass", "dark"], rating: "9.1", year: "4K", p: { seed: "UV4",  styleId: "liquid",      paletteId: "ultraviolet",    keywords: "neon flow",     text: "", intensity: 0.65, grainOn: false } },
   { label: "Candy Sky",    cat: ["mesh", "pastel"],rating: "8.8", year: "4K", p: { seed: "REF3", styleId: "mesh",        paletteId: "candy-sky",      keywords: "sunset bloom",  text: "", intensity: 0.75, grainOn: true } },
   { label: "Amethyst Jade",cat: ["mesh", "pastel"],rating: "8.6", year: "4K", p: { seed: "AJ1",  styleId: "mesh",        paletteId: "amethyst-jade",  keywords: "soft bleed",    text: "", intensity: 0.72, grainOn: true } },
   { label: "Indigo Dusk",  cat: ["soft", "dark"],  rating: "9.0", year: "4K", p: { seed: "REF1", styleId: "soft-linear", paletteId: "indigo-dusk",    keywords: "quiet dawn",    text: "", intensity: 0.7,  grainOn: true } },
@@ -34,7 +34,7 @@ const SHOW: Item[] = [
 
 const CATS: { id: Item["cat"][number] | "all"; label: string; icon: string }[] = [
   { id: "all",    label: "Trending", icon: "✦" },
-  { id: "aura",   label: "Aura",     icon: "◉" },
+  { id: "glass",  label: "Glass",    icon: "◉" },
   { id: "soft",   label: "Soft",     icon: "◗" },
   { id: "mesh",   label: "Mesh",     icon: "❖" },
   { id: "dark",   label: "Dark",     icon: "◐" },
@@ -46,8 +46,7 @@ function quickDownload(p: GenParams) { exportWallpaper(p, DESKTOP, "png"); }
 
 function loadPreset(p: GenParams) {
   try { localStorage.setItem("aura_load", JSON.stringify(p)); } catch {}
-  location.href = "/#generator";
-  location.reload();
+  location.href = "/create";
 }
 
 export default function Shell() {
@@ -87,10 +86,6 @@ export default function Shell() {
 
       {/* ---------- MOBILE (clean, playful) ---------- */}
       <div className="m-hero">
-        <div className="wrap m-bar">
-          <span className="m-brand">aura<span className="brand-light">.studio</span></span>
-          <ThemeToggle />
-        </div>
         <div className="wrap m-hero-body">
           <span className="m-kicker">Gradient wallpaper studio</span>
           <h1 className="m-title">Make your<br />screen <span className="serif">glow</span>.</h1>
@@ -99,7 +94,7 @@ export default function Shell() {
             <Canvas params={featA} w={720} h={1280} className="m-feature-canvas" ariaLabel="Featured wallpaper" />
           </div>
           <div className="m-cta">
-            <a className="btn grad" href="#generator">Generate yours</a>
+            <a className="btn grad" href="/create">Generate yours</a>
             <button className="btn ghost" onClick={() => setFeatSeed(rnd())}>Shuffle ↻</button>
           </div>
           <div className="m-pop-head">Popular now</div>
@@ -120,23 +115,35 @@ export default function Shell() {
         <div className="glass window flix">
           {/* top bar */}
           <div className="flix-top">
-            <div className="flix-brand">aura<span className="brand-light">.studio</span></div>
-            <div className="flix-nav">
-              <div className="flix-seg">
-                <button className="seg active">Wallpapers</button>
-                <a className="seg" href="#gallery">Palettes</a>
-                <a className="seg" href="#generator">Studio</a>
+            <a href="/" className="flix-brand">
+              <span className="flix-logo" aria-hidden="true" />
+              aura<span className="brand-light">.studio</span>
+            </a>
+            <nav className="flix-nav" aria-label="Primary">
+              <div className="flix-seg" role="tablist">
+                <button className="seg active" role="tab" aria-selected="true">Wallpapers</button>
+                <a className="seg" role="tab" href="#gallery">Palettes</a>
+                <a className="seg" role="tab" href="/create">Studio</a>
+                <a className="seg" role="tab" href="/explore">Explore</a>
               </div>
-              <a className="flix-srch" href="#generator" aria-label="Search / open studio">⌕</a>
-            </div>
+            </nav>
             <div className="flix-user">
+              <a className="flix-icon" href="/create" aria-label="Search wallpapers">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></svg>
+              </a>
               <ThemeToggle />
-              <span className="flix-mic" aria-hidden="true">🎙</span>
-              <div className="flix-acct">
-                <span className="flix-avatar"><i className="flix-dot" /></span>
-                <span className="flix-acct-meta"><b>aura.studio</b><small>Pro · local</small></span>
-                <span className="flix-caret">⌄</span>
-              </div>
+              <button className="flix-acct" aria-label="Account: aura.studio Pro, local workspace">
+                <span className="flix-avatar" aria-hidden="true">
+                  <span className="flix-avatar-glyph">a</span>
+                  <i className="flix-dot" />
+                </span>
+                <span className="flix-acct-meta">
+                  <b>aura.studio</b>
+                  <small>Local workspace</small>
+                </span>
+                <span className="flix-pro" aria-hidden="true">PRO</span>
+                <svg className="flix-caret" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+              </button>
             </div>
           </div>
 
@@ -191,7 +198,7 @@ export default function Shell() {
             </div>
             <div className="cat-sort">
               <a className="sort-btn" href="#gallery" aria-label="Grid view">▦</a>
-              <a className="sort-btn" href="#generator" aria-label="Create">＋</a>
+              <a className="sort-btn" href="/create" aria-label="Create">＋</a>
             </div>
           </div>
 

@@ -4,20 +4,23 @@ import { render, GenParams } from "@/lib/engine";
 import { PALETTES, STYLES, DEVICES } from "@/lib/presets";
 import { exportWallpaper } from "@/lib/exporter";
 import BatchTen from "./BatchTen";
+import { extractPaletteFromFile } from "@/lib/palette";
 
 const randSeed = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const grad = (cols: string[]) => `linear-gradient(135deg, ${cols.join(", ")})`;
 
 export default function Studio() {
   const [params, setParams] = useState<GenParams>({
-    seed: "AURA01",
-    styleId: "aura",
-    paletteId: "aura-bloom",
-    keywords: "calm cosmic glow",
+    seed: "GLASS01",
+    styleId: "fluted",
+    paletteId: "glacier",
+    keywords: "soft light",
     text: "",
-    intensity: 0.85,
-    grainOn: true,
+    intensity: 0.6,
+    grainOn: false,
   });
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [device, setDevice] = useState(DEVICES[3]);
   const [format, setFormat] = useState<"png" | "jpeg">("png");
   const [busy, setBusy] = useState(false);
@@ -27,6 +30,21 @@ export default function Studio() {
 
   const set = <K extends keyof GenParams>(k: K, v: GenParams[K]) =>
     setParams((p) => ({ ...p, [k]: v }));
+
+  const pickPalette = (id: string) =>
+    setParams((p) => ({ ...p, paletteId: id, customColors: undefined }));
+
+  const onPhoto = async (file?: File) => {
+    if (!file) return;
+    setPhotoBusy(true);
+    try {
+      const cols = await extractPaletteFromFile(file, 5);
+      setParams((p) => ({ ...p, customColors: cols }));
+    } catch {}
+    finally { setPhotoBusy(false); }
+  };
+
+  const clearCustom = () => setParams((p) => ({ ...p, customColors: undefined }));
 
   useEffect(() => {
     try {
@@ -91,16 +109,27 @@ export default function Studio() {
               onChange={(e) => setPalQuery(e.target.value)} aria-label="Search palettes" />
             <div className="pal-grid" role="listbox" aria-label="Palettes">
               {shownPals.map((p) => (
-                <button key={p.id} className="pal-chip" role="option" aria-selected={params.paletteId === p.id}
-                  onClick={() => set("paletteId", p.id)} title={p.name}>
+                <button key={p.id} className="pal-chip" role="option" aria-selected={!params.customColors && params.paletteId === p.id}
+                  onClick={() => pickPalette(p.id)} title={p.name}>
                   <span className="pal-sw" style={{ background: grad(p.colors) }} />
                   <span className="pal-nm">{p.name}</span>
                 </button>
               ))}
             </div>
-            <div className="swatches" aria-hidden="true">
-              {palette.colors.map((c, i) => <span key={i} className="sw" style={{ background: c }} />)}
+            <div className="photo-row">
+              <input ref={fileRef} type="file" accept="image/*" hidden
+                onChange={(e) => onPhoto(e.target.files?.[0])} />
+              <button className="btn ghost sm" onClick={() => fileRef.current?.click()} disabled={photoBusy}>
+                {photoBusy ? "Reading photo…" : "Extract from photo"}
+              </button>
+              {params.customColors && (
+                <button className="btn ghost sm" onClick={clearCustom}>Clear custom</button>
+              )}
             </div>
+            <div className="swatches" aria-hidden="true">
+              {(params.customColors ?? palette.colors).map((c, i) => <span key={i} className="sw" style={{ background: c }} />)}
+            </div>
+            {params.customColors && <div className="hint">Custom palette from your photo — pick any palette above to clear it.</div>}
           </div>
 
           <div className="field">
