@@ -5,6 +5,7 @@ import { PALETTES, STYLES, DEVICES, StyleId } from "@/lib/presets";
 import { exportWallpaper, exportBatchZip } from "@/lib/exporter";
 import { hashSeed, mulberry32 } from "@/lib/prng";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 const PHONE = DEVICES.find((d) => d.id === "phone")!;
 const DESKTOP = DEVICES.find((d) => d.id === "desktop")!;
@@ -215,6 +216,7 @@ export default function Explore() {
             </>
           )}
         </div>
+      <Footer />
       </main>
     </>
   );

@@ -95,7 +95,6 @@ h2.display{font-size:clamp(2rem,4.5vw,3.4rem)}
 .nav-acct:hover{background:rgba(127,127,127,.14)}
 .nav-acct .flix-avatar{width:32px;height:32px}
 .nav .m-drawer,.nav .m-scrim{pointer-events:auto}
-.nav .m-drawer{top:86px}
 .brand{font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:-.02em;display:flex;align-items:center;gap:.5rem}
 .brand-light{color:var(--mut);font-weight:500}
 .brand-dot{width:12px;height:12px;border-radius:50%;background:conic-gradient(from 0deg,var(--g1),var(--g2),var(--g3),var(--g1));box-shadow:0 0 14px var(--acc)}
@@ -213,6 +212,7 @@ footer{border-top:1px solid var(--line);padding:3rem 0;color:var(--mut);font-siz
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;align-items:center}
 .foot a{transition:color .2s}
 .foot a:hover{color:var(--txt)}
+.foot-links{display:flex;gap:22px;flex-wrap:wrap}
 
 
 /* ---- nav right + theme toggle ---- */
@@ -314,7 +314,7 @@ body.rm *{transition-duration:.01ms !important}
 .m-burger.open span:nth-child(2){opacity:0}
 .m-burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 .m-scrim{position:fixed;inset:0;z-index:40;border:none;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);cursor:pointer;animation:fadeIn .2s ease}
-.m-drawer{position:fixed;top:76px;left:14px;right:14px;z-index:41;display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:20px;background:var(--card,var(--bg,#111));border:1px solid var(--line);box-shadow:0 24px 60px #0007;animation:drawerIn .28s cubic-bezier(.2,.7,.2,1)}
+.m-drawer{position:fixed;top:86px;left:14px;right:14px;z-index:41;display:flex;flex-direction:column;gap:4px;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-radius:20px;background:var(--card,var(--bg,#111));border:1px solid var(--line);box-shadow:0 24px 60px #0007;animation:drawerIn .28s cubic-bezier(.2,.7,.2,1);max-height:calc(100dvh - 100px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .m-drawer a{font-family:var(--font-display);font-weight:600;font-size:1.1rem;color:var(--txt);text-decoration:none;padding:14px 14px;border-radius:12px;transition:background .2s}
 .m-drawer a:hover,.m-drawer a:active{background:var(--panel,rgba(127,127,127,.08))}
 .m-drawer-cta{justify-content:center;margin-top:8px;text-align:center}

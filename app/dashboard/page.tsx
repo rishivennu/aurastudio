@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 type Stats = Record<string, number>;
 
@@ -70,6 +71,7 @@ export default function Dashboard() {
           then set <code>KV_REST_API_URL</code> and <code>KV_REST_API_TOKEN</code> in Project
           Settings → Environment Variables. Redeploy. No code change needed.
         </div>
+      <Footer />
       </main>
     </>
   );

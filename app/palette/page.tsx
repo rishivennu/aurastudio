@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import { PALETTES } from "@/lib/presets";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: `${PALETTES.length} gradient colour palettes with hex codes | aura.studio`,
@@ -28,6 +29,7 @@ export default function Palettes() {
             ))}
           </ul>
         </div>
+      <Footer />
       </main>
     </>
   );

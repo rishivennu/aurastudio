@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import { PALETTES, Palette } from "@/lib/presets";
 import { encodeParams } from "@/lib/share";
+import Footer from "@/components/Footer";
 
 type Fmt = "css" | "tailwind" | "json" | "gradient" | "animated" | "svg";
 
@@ -231,6 +232,7 @@ export default function Palettes() {
           </div>
         </div>
         <div className="toast" role="status" aria-live="polite">{toast && <span key={toast}>{toast}</span>}</div>
+      <Footer />
       </main>
     </>
   );

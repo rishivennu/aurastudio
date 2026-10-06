@@ -6,6 +6,7 @@ import { decodeParams } from "@/lib/share";
 import { DEVICES, PALETTES, STYLES } from "@/lib/presets";
 import { exportWallpaper } from "@/lib/exporter";
 import { Post, like, likedSet } from "@/lib/community";
+import Footer from "@/components/Footer";
 
 const DESK = DEVICES.find((d) => d.id === "desktop")!;
 type Sort = "new" | "top";
@@ -157,6 +158,7 @@ export default function Community() {
             </>
           )}
         </div>
+      <Footer />
       </main>
     </>
   );

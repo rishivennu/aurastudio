@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 type Stats = Record<string, number>;
 type Geo = { lat: number | null; lon: number | null; acc: number | null; city: string | null; region: string | null; country: string | null; ts: number };
@@ -62,6 +63,7 @@ export default function Admin() {
             <button className="btn" disabled={busy}>{busy ? "Checking…" : "Unlock"}</button>
           </form>
           {err && <p className="admin-err">{err}</p>}
+        <Footer />
         </main>
       </>
     );
@@ -128,6 +130,7 @@ export default function Admin() {
             No locations yet. {configured ? "They appear once a visitor accepts cookies and grants location." : "Location logging requires Vercel KV."}
           </p>
         )}
+      <Footer />
       </main>
     </>
   );

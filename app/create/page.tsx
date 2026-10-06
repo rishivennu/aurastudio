@@ -4,6 +4,7 @@ import Studio from "@/components/Studio";
 import Reveal from "@/components/Reveal";
 import { decodeParams } from "@/lib/share";
 import { PALETTES, STYLES } from "@/lib/presets";
+import Footer from "@/components/Footer";
 
 type Props = { searchParams: { w?: string | string[] } };
 
@@ -38,6 +39,7 @@ export default function Create() {
           </header>
           <Studio />
         </div>
+      <Footer />
       </main>
     </>
   );

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import { PALETTES } from "@/lib/presets";
+import Footer from "@/components/Footer";
 
 const MODES = [
   { id: "blobs", name: "Glow blobs" }, { id: "mesh", name: "Soft mesh" }, { id: "aurora", name: "Aurora" },
@@ -76,6 +77,7 @@ export default function Embed() {
           </ul>
           <p className="hint">More code formats for this palette (CSS variables, Tailwind, SVG) are in the <a href={`/palettes?p=${pal}`}>Palette Lab</a>.</p>
         </div>
+      <Footer />
       </main>
     </>
   );

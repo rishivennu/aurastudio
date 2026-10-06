@@ -9,6 +9,7 @@ import {
 import type { GenParams } from "@/lib/engine";
 import { exportWallpaper } from "@/lib/exporter";
 import { DEVICES, STYLES, PALETTES } from "@/lib/presets";
+import Footer from "@/components/Footer";
 
 const PHONE = DEVICES.find((d) => d.id === "phone") ?? DEVICES[0];
 const DESKTOP = DEVICES.find((d) => d.id === "desktop") ?? DEVICES[0];
@@ -214,6 +215,7 @@ export default function SavedPage() {
           )}
         </div>
         <div className="toast" role="status" aria-live="polite">{toast && <span key={toast}>{toast}</span>}</div>
+      <Footer />
       </main>
     </>
   );

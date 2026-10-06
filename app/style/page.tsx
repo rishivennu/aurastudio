@@ -3,6 +3,7 @@ import Nav from "@/components/Nav";
 import Canvas from "@/components/Canvas";
 import { STYLES } from "@/lib/presets";
 import { cleanDesc, styleExamples } from "@/lib/seo";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: `All ${STYLES.length} wallpaper styles | aura.studio`,
@@ -28,6 +29,7 @@ export default function Styles() {
             ))}
           </ul>
         </div>
+      <Footer />
       </main>
     </>
   );

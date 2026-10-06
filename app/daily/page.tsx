@@ -9,6 +9,7 @@ import { dailyParams, dayKey, touchStreak } from "@/lib/daily";
 import { PALETTES, STYLES, DEVICES } from "@/lib/presets";
 import { exportWallpaper } from "@/lib/exporter";
 import { encodeParams, isSaved, toggleSaved } from "@/lib/share";
+import Footer from "@/components/Footer";
 
 const PHONE = DEVICES.find((d) => d.id === "phone")!;
 const DESK = DEVICES.find((d) => d.id === "desktop")!;
@@ -47,7 +48,7 @@ export default function Daily() {
 
   const cur = days[view];
   useEffect(() => { if (cur) setSaved(isSaved(cur.p)); }, [cur]);
-  if (!cur) return (<><Nav /><main className="create daily"><div className="wrap"><span className="kicker">Daily drop</span><h1 className="display">Loading today…</h1></div></main></>);
+  if (!cur) return (<><Nav /><main className="create daily"><div className="wrap"><span className="kicker">Daily drop</span><h1 className="display">Loading today…</h1></div><Footer /></main></>);
 
   const style = STYLES.find((s) => s.id === cur.p.styleId)?.name;
   const pal = PALETTES.find((x) => x.id === cur.p.paletteId);
@@ -105,6 +106,7 @@ export default function Daily() {
           <AutoDaily />
           <Subscribe />
         </div>
+      <Footer />
       </main>
     </>
   );

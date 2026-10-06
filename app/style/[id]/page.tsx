@@ -4,6 +4,7 @@ import Nav from "@/components/Nav";
 import Canvas from "@/components/Canvas";
 import { PALETTES, STYLES } from "@/lib/presets";
 import { cleanDesc, imgUrl, studioUrl, styleExamples } from "@/lib/seo";
+import Footer from "@/components/Footer";
 
 export const dynamicParams = false;
 export const generateStaticParams = () => STYLES.map((s) => ({ id: s.id }));
@@ -66,6 +67,7 @@ export default function StylePage({ params }: { params: { id: string } }) {
             {near.map((x) => <a key={x.id} className="seo-chip" href={`/style/${x.id}`}>{x.name}</a>)}
           </div>
         </div>
+      <Footer />
       </main>
     </>
   );

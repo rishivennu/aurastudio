@@ -4,6 +4,7 @@ import Nav from "@/components/Nav";
 import Canvas from "@/components/Canvas";
 import { PALETTES, STYLES } from "@/lib/presets";
 import { imgUrl, paletteBlurb, paletteExamples, relatedPalettes, studioUrl } from "@/lib/seo";
+import Footer from "@/components/Footer";
 
 export const dynamicParams = false;
 export const generateStaticParams = () => PALETTES.map((p) => ({ id: p.id }));
@@ -69,6 +70,7 @@ export default function PalettePage({ params }: { params: { id: string } }) {
           <h2 className="seo-h2">Every style</h2>
           <div className="seo-chips">{STYLES.map((s) => <a key={s.id} className="seo-chip" href={`/style/${s.id}`}>{s.name}</a>)}</div>
         </div>
+      <Footer />
       </main>
     </>
   );
