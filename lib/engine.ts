@@ -696,19 +696,159 @@ function overlayText(ctx: CanvasRenderingContext2D, W: number, H: number, text?:
 }
 
 type PixelDraw = (ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) => void;
+// Horizon: a soft, grainy atmospheric gradient on a gentle diagonal — a blurred sunset sky.
+function drawHorizon(ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) {
+  const r = mulberry32(hashSeed("horizon" + seed));
+  const lut = rampLUT(colors);
+  const ph: number[] = []; for (let i = 0; i < 5; i++) ph.push(r() * 6.283);
+  const tilt = (r() * 2 - 1) * 0.18, aspect = W / H;
+  const img = ctx.createImageData(W, H); const d = img.data;
+  for (let y = 0; y < H; y++) { const v = y / H;
+    for (let x = 0; x < W; x++) { const u = x / W;
+      let t = v + (u - 0.5) * tilt;                       // diagonal band
+      t += 0.045 * Math.sin(u * 2.3 * aspect + ph[0]) + 0.03 * Math.sin(v * 1.7 + ph[1]) + 0.02 * Math.sin((u + v) * 3.1 + ph[2]);
+      putLUT(d, (y * W + x) * 4, lut, clamp01(t));
+    }}
+  ctx.putImageData(img, 0, 0);
+}
+
+// Ribbon: an iridescent liquid-metal ribbon winding down the frame, finely line-etched, on dark.
+function drawRibbon(ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) {
+  const r = mulberry32(hashSeed("ribbon" + seed));
+  const lut = rampLUT(colors);
+  const ph: number[] = []; for (let i = 0; i < 6; i++) ph.push(r() * 6.283);
+  const aspect = W / H, amp = 0.15 + r() * 0.06, freq = 3.0 + r() * 1.6, hatch = 85 + inten * 80;
+  const img = ctx.createImageData(W, H); const d = img.data;
+  for (let y = 0; y < H; y++) { const v = y / H;
+    const cx = 0.5 + amp * Math.sin(v * freq * 3.14159 + ph[0]) + 0.06 * Math.sin(v * freq * 2.3 + ph[1]);
+    const halfW = 0.19 + 0.05 * Math.sin(v * 2.1 + ph[2]);
+    for (let x = 0; x < W; x++) { const u = x / W;
+      const dist = Math.abs(u - cx) * aspect;
+      const shape = clamp01(1 - dist / halfW);                     // 1 at centre -> 0 at edge
+      const hv = 0.5 + 0.5 * Math.sin((u - cx) * hatch + v * 7 + ph[3] + 3 * shape); // etched contour lines
+      const irid = 0.5 + 0.5 * Math.sin(v * 4 + dist * 6 + ph[4]); // slow colour travel
+      const bandT = clamp01(0.08 + 0.78 * irid - 0.3 * hv * shape);
+      const t = shape * bandT + (1 - shape) * 1.0;                 // bright ribbon over dark
+      putLUT(d, (y * W + x) * 4, lut, clamp01(t));
+    }}
+  ctx.putImageData(img, 0, 0);
+}
+
+// Panes: a stack of translucent glass capsules, each catching a gradient sheen, on black.
+function drawPanes(ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) {
+  const r = mulberry32(hashSeed("panes" + seed));
+  const lut = rampLUT(colors);
+  const n = 5 + Math.floor(r() * 2), aspect = W / H;
+  const hw = 0.25, gap = 0.012, totalH = 0.74, top = 0.13;
+  const paneH = (totalH - (n - 1) * gap) / n, hh = paneH / 2, rad = hh, slot = paneH + gap;
+  const img = ctx.createImageData(W, H); const d = img.data;
+  for (let y = 0; y < H; y++) { const v = y / H;
+    for (let x = 0; x < W; x++) { const u = x / W;
+      let t = 1;                                                   // black background
+      const idx = Math.floor((v - top) / slot);
+      if (idx >= 0 && idx < n) {
+        const cy = top + idx * slot + hh;
+        let qx = Math.abs(u - 0.5) * aspect - (hw * aspect - rad);
+        let qy = Math.abs(v - cy) - (hh - rad);
+        qx = Math.max(qx, 0); qy = Math.max(qy, 0);
+        const sd = Math.hypot(qx, qy) - rad;                       // <0 inside pane
+        if (sd < 0) {
+          const gx = clamp01((u - 0.5 + hw) / (2 * hw));           // palette sweep L->R
+          const gy = clamp01((cy + hh - v) / (2 * hh));            // top of pane brighter
+          const rim = sstep((sd + 0.012) / 0.012);                 // bright glass edge
+          const base = 0.22 + 0.58 * gx;
+          t = clamp01(base - Math.pow(gy, 2) * 0.45 - rim * 0.3);
+        }
+      }
+      putLUT(d, (y * W + x) * 4, lut, t);
+    }}
+  ctx.putImageData(img, 0, 0);
+}
+
+// Arches: nested concentric stadium bands around two mirrored vertical cores — subway arches.
+function drawArches(ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) {
+  const r = mulberry32(hashSeed("arches" + seed));
+  const lut = rampLUT(colors);
+  const bands = 7 + Math.floor(r() * 4), aspect = W / H, cx = 0.5;
+  const segs: [number, number][] = [[0.05, 0.30], [0.70, 0.95]];
+  const img = ctx.createImageData(W, H); const d = img.data;
+  for (let y = 0; y < H; y++) { const v = y / H;
+    for (let x = 0; x < W; x++) { const u = x / W;
+      let best = 9;
+      for (const [ya, yb] of segs) {
+        const px = (u - cx) * aspect;
+        const py = v - Math.max(ya, Math.min(yb, v));              // 0 along the segment
+        const dd = Math.hypot(px, py);
+        if (dd < best) best = dd;
+      }
+      const scaled = clamp01(best / 0.46);
+      const q = Math.floor(scaled * bands) / bands;                // discrete rings
+      putLUT(d, (y * W + x) * 4, lut, clamp01(1 - q));             // centre dark, outer light
+    }}
+  ctx.putImageData(img, 0, 0);
+}
+
+// Bloom: a symmetric neon light-form — four mirrored glowing petals on black.
+function drawBloom(ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) {
+  const r = mulberry32(hashSeed("bloom" + seed));
+  const lut = rampLUT(colors);
+  const ph: number[] = []; for (let i = 0; i < 4; i++) ph.push(r() * 6.283);
+  const aspect = W / H, lobe = 0.18 + r() * 0.05;
+  const img = ctx.createImageData(W, H); const d = img.data;
+  for (let y = 0; y < H; y++) { const v = y / H;
+    for (let x = 0; x < W; x++) { const u = x / W;
+      const dx = Math.abs(u - 0.5) * aspect, dy = Math.abs(v - 0.5) * 1.5;
+      const rad = Math.hypot(dx, dy), ang = Math.atan2(dy, dx);    // folded quadrant
+      const R = lobe + 0.26 * Math.sin(ang * 2);                   // petal profile
+      const edge = rad - R;
+      const rim = Math.exp(-edge * edge * 150) * (0.75 + 0.35 * inten);
+      const fill = Math.exp(-rad * rad * 6) * 0.45;
+      putLUT(d, (y * W + x) * 4, lut, clamp01(1 - clamp01(rim + fill)));
+    }}
+  ctx.putImageData(img, 0, 0);
+}
+
+// Flux: an electric fibrous burst radiating from an off-centre focus, bright rainbow core.
+function drawFlux(ctx: CanvasRenderingContext2D, W: number, H: number, colors: string[], seed: string, inten: number) {
+  const r = mulberry32(hashSeed("flux" + seed));
+  const lut = rampLUT(colors);
+  const ph: number[] = []; for (let i = 0; i < 8; i++) ph.push(r() * 6.283);
+  const aspect = W / H, fx = 0.6 + r() * 0.12, fy = 0.42 + r() * 0.14;
+  const fibers = 22 + Math.floor(r() * 16);
+  const img = ctx.createImageData(W, H); const d = img.data;
+  for (let y = 0; y < H; y++) { const v = y / H;
+    for (let x = 0; x < W; x++) { const u = x / W;
+      const dx = (u - fx) * aspect, dy = v - fy, rad = Math.hypot(dx, dy);
+      let ang = Math.atan2(dy, dx);
+      ang += 0.5 * Math.sin(rad * 4 + ph[0]) + 0.3 * Math.sin(rad * 9 + ph[1]);   // wandering fibres
+      const fib = 0.5 + 0.5 * Math.sin(ang * fibers + ph[2] + Math.sin(ang * 7 + ph[3]));
+      const core = Math.exp(-rad * rad * 5);
+      const body = clamp01(Math.exp(-rad * 1.6) * fib + core);
+      putLUT(d, (y * W + x) * 4, lut, clamp01(1 - body));
+    }}
+  ctx.putImageData(img, 0, 0);
+}
+
 const EXTRA_DRAW: Record<string, PixelDraw> = {
   aurora: drawAurora, meshgrid: drawMeshGrid, topo: drawTopo, plasma: drawPlasma,
   bokeh: drawBokeh, sunburst: drawSunburst, voronoi: drawVoronoi, metaballs: drawMetaballs,
   marble: drawMarble, silk: drawSilk,
   iridescent: drawIridescent, vortex: drawVortex, halftone: drawHalftone,
   nebula: drawNebula, ripple: drawRipple, mosaic: drawMosaic, kaleido: drawKaleido,
+  horizon: drawHorizon, ribbon: drawRibbon, panes: drawPanes, arches: drawArches, bloom: drawBloom, flux: drawFlux,
 };
 const PIXEL_LAYOUTS = new Set<string>([
   "ridges", "dotfield", "liquid", "fluted",
   "aurora", "meshgrid", "topo", "plasma", "bokeh", "sunburst", "voronoi", "metaballs", "marble", "silk",
   "iridescent", "vortex", "halftone",
   "nebula", "ripple", "mosaic", "kaleido",
+  "horizon", "ribbon", "panes", "arches", "bloom", "flux",
 ]);
+
+// swappable so the same engine can draw on the server (node canvas) as well as in the browser
+type AnyCanvas = { width: number; height: number; getContext(t: "2d"): CanvasRenderingContext2D | null };
+let makeCanvas = (w: number, h: number): AnyCanvas => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+export function setCanvasFactory(f: (w: number, h: number) => AnyCanvas) { makeCanvas = f; }
 
 export function render(ctx: CanvasRenderingContext2D, W: number, H: number, p: GenParams) {
   const scene = buildScene(p);
@@ -845,8 +985,7 @@ export function render(ctx: CanvasRenderingContext2D, W: number, H: number, p: G
 function applyGrain(ctx: CanvasRenderingContext2D, W: number, H: number, amount: number, seed: string) {
   // tile a small noise canvas for speed at 4K
   const tile = 256;
-  const nc = document.createElement("canvas");
-  nc.width = tile; nc.height = tile;
+  const nc = makeCanvas(tile, tile);
   const nctx = nc.getContext("2d")!;
   const img = nctx.createImageData(tile, tile);
   const rnd = mulberry32(hashSeed("grain" + seed));
@@ -856,7 +995,7 @@ function applyGrain(ctx: CanvasRenderingContext2D, W: number, H: number, amount:
     img.data[i + 3] = Math.floor(amount * 255);
   }
   nctx.putImageData(img, 0, 0);
-  const pat = ctx.createPattern(nc, "repeat");
+  const pat = ctx.createPattern(nc as unknown as CanvasImageSource, "repeat");
   if (pat) {
     ctx.save();
     ctx.globalCompositeOperation = "overlay";

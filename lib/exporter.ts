@@ -13,7 +13,8 @@ export async function renderToBlob(
   const t0 = performance.now();
   render(ctx, w, h, params);
   const mime = format === "png" ? "image/png" : "image/jpeg";
-  const blob: Blob = await new Promise((res) => off.toBlob((b) => res(b as Blob), mime, 0.92));
+  const blob: Blob = await new Promise((res, rej) => off.toBlob((b) => (b ? res(b) : rej(new Error("canvas too large for this browser"))), mime, 0.92));
+  off.width = off.height = 0;
   return { blob, ms: Math.round(performance.now() - t0) };
 }
 
@@ -53,4 +54,30 @@ export async function exportBatchZip(
   const seed = items[0]?.seed || "set";
   downloadBlob(content, `aura_wallpapers_${seed}_${dev.id}.zip`);
   track(delta);
+}
+
+/** One wallpaper at every device size, zipped. Sizes the browser cannot allocate (8K on some phones) are skipped, not fatal. */
+export async function exportDevicesZip(
+  params: GenParams, devs: Dev[], format: "png" | "jpeg",
+  onProgress?: (done: number, total: number) => void
+): Promise<{ ok: number; skipped: string[] }> {
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  const skipped: string[] = []; let ms = 0;
+  for (let i = 0; i < devs.length; i++) {
+    const d = devs[i];
+    // zipping holds every file in memory; leave giant sizes for single downloads
+    if (d.w * d.h > 16_000_000) { skipped.push(d.name); onProgress?.(i + 1, devs.length); continue; }
+    try {
+      const r = await renderToBlob(params, d.w, d.h, format);
+      if (!r.blob) throw new Error("empty");
+      zip.file(`aura_${params.styleId}_${params.seed}_${d.id}_${d.w}x${d.h}.${format}`, r.blob); ms += r.ms;
+    } catch { skipped.push(d.name); }
+    onProgress?.(i + 1, devs.length);
+    await new Promise((r) => setTimeout(r, 0));
+  }
+  const ok = devs.length - skipped.length;
+  if (ok) downloadBlob(await zip.generateAsync({ type: "blob" }), `aura_${params.styleId}_${params.seed}_device-pack.zip`);
+  track({ generations: 1, downloads: ok, ms_total: ms });
+  return { ok, skipped };
 }

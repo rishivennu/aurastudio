@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { GenParams } from "@/lib/engine";
 import Canvas from "./Canvas";
 import Marquee from "./Marquee";
-import ThemeToggle from "./ThemeToggle";
 import { exportWallpaper } from "@/lib/exporter";
 import { DEVICES, PALETTES } from "@/lib/presets";
 
@@ -113,40 +112,6 @@ export default function Shell() {
       <div className="wrap d-hero">
         <Marquee items={["AURA STUDIO", "BOLD GRADIENTS", "4K · NO UPLOAD", "CRAFTED IN YOUR BROWSER"]} />
         <div className="glass window flix">
-          {/* top bar */}
-          <div className="flix-top">
-            <a href="/" className="flix-brand">
-              <span className="flix-logo" aria-hidden="true" />
-              aura<span className="brand-light">.studio</span>
-            </a>
-            <nav className="flix-nav" aria-label="Primary">
-              <div className="flix-seg" role="tablist">
-                <button className="seg active" role="tab" aria-selected="true">Wallpapers</button>
-                <a className="seg" role="tab" href="#gallery">Palettes</a>
-                <a className="seg" role="tab" href="/create">Studio</a>
-                <a className="seg" role="tab" href="/explore">Explore</a>
-              </div>
-            </nav>
-            <div className="flix-user">
-              <a className="flix-icon" href="/create" aria-label="Search wallpapers">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></svg>
-              </a>
-              <ThemeToggle />
-              <button className="flix-acct" aria-label="Account: aura.studio Pro, local workspace">
-                <span className="flix-avatar" aria-hidden="true">
-                  <span className="flix-avatar-glyph">a</span>
-                  <i className="flix-dot" />
-                </span>
-                <span className="flix-acct-meta">
-                  <b>aura.studio</b>
-                  <small>Local workspace</small>
-                </span>
-                <span className="flix-pro" aria-hidden="true">PRO</span>
-                <svg className="flix-caret" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
-              </button>
-            </div>
-          </div>
-
           {/* two featured cards */}
           <div className="flix-feat">
             <article className="feat-card">

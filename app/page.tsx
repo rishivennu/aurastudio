@@ -3,6 +3,8 @@ import GalleryCard from "@/components/GalleryCard";
 import Shell from "@/components/Shell";
 import Nav from "@/components/Nav";
 import Reveal from "@/components/Reveal";
+import Spotlight from "@/components/Spotlight";
+import Subscribe from "@/components/Subscribe";
 import { GenParams } from "@/lib/engine";
 import { PALETTES } from "@/lib/presets";
 
@@ -46,6 +48,8 @@ export default function Home() {
       <Shell />
       <main>
 
+        <Spotlight />
+
         <section id="how" className="section light">
           <div className="wrap">
             <Reveal variant="up"><span className="kicker">The idea</span>
@@ -86,10 +90,14 @@ export default function Home() {
 
         <footer>
           <div className="wrap foot">
-            <div>© {new Date().getFullYear()} aura.studio — crafted for people who notice.</div>
+            <div>© {new Date().getFullYear()} aura.studio, crafted for people who notice.</div>
+            <Subscribe compact />
             <div style={{ display: "flex", gap: 22 }}>
               <a href="/dashboard">Dashboard</a>
               <a href="/create">Create</a>
+              <a href="/palettes">Palettes</a>
+              <a href="/daily">Daily</a>
+              <a href="/community">Community</a>
               <a href="https://vercel.com" target="_blank" rel="noreferrer">Vercel</a>
             </div>
           </div>

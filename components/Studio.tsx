@@ -5,6 +5,10 @@ import { PALETTES, STYLES, DEVICES } from "@/lib/presets";
 import { exportWallpaper } from "@/lib/exporter";
 import BatchTen from "./BatchTen";
 import { extractPaletteFromFile } from "@/lib/palette";
+import { decodeParams, shareUrl, isSaved, toggleSaved } from "@/lib/share";
+import { publish, uploadThumb } from "@/lib/community";
+import StudioExtras from "./StudioExtras";
+import VibeBox from "./VibeBox";
 
 const randSeed = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const grad = (cols: string[]) => `linear-gradient(135deg, ${cols.join(", ")})`;
@@ -26,6 +30,14 @@ export default function Studio() {
   const [busy, setBusy] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [palQuery, setPalQuery] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [lockPreview, setLockPreview] = useState(true);
+  const [now, setNow] = useState<Date | null>(null);
+  const [pubOpen, setPubOpen] = useState(false);
+  const [pubTitle, setPubTitle] = useState("");
+  const [remixOf, setRemixOf] = useState<string | null>(null);
+  const [pubBusy, setPubBusy] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const set = <K extends keyof GenParams>(k: K, v: GenParams[K]) =>
@@ -48,6 +60,12 @@ export default function Studio() {
 
   useEffect(() => {
     try {
+      const qs = new URLSearchParams(location.search);
+      const from = qs.get("from");
+      if (from && /^[a-f0-9]{12}$/.test(from)) setRemixOf(from);
+      const tok = qs.get("w");
+      const shared = tok ? decodeParams(tok) : null;
+      if (shared) { setParams(shared); return; }
       const raw = localStorage.getItem("aura_load");
       if (raw) { setParams(JSON.parse(raw)); localStorage.removeItem("aura_load"); }
     } catch {}
@@ -66,6 +84,67 @@ export default function Studio() {
 
   useEffect(() => { document.body.classList.toggle("rm", reduced); }, [reduced]);
 
+  useEffect(() => { setSaved(isSaved(params)); }, [params]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!lockPreview) return;
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, [lockPreview]);
+
+  const surprise = useCallback(() => {
+    const st = STYLES[Math.floor(Math.random() * STYLES.length)];
+    const pal = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+    setParams((p) => ({ ...p, styleId: st.id, paletteId: pal.id, customColors: undefined, seed: randSeed() }));
+    setRemixOf(null);
+  }, []);
+
+  const onSave = () => {
+    const on = toggleSaved(params);
+    setSaved(on);
+    setToast(on ? "Saved to your collection" : "Removed from saved");
+  };
+
+  const onShare = async () => {
+    const url = shareUrl(params);
+    uploadThumb(params);
+    try { await navigator.clipboard.writeText(url); setToast("Share link copied"); }
+    catch { window.prompt("Copy this link", url); }
+  };
+
+  const onPublish = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPubBusy(true);
+    try {
+      const r = await publish(params, pubTitle, remixOf);
+      if (r.ok && r.existed) { setToast("That exact wallpaper is already published. Change something to make it yours."); }
+      else if (r.ok) { setToast(remixOf ? "Published as a remix" : "Published to the community"); setPubOpen(false); setPubTitle(""); setRemixOf(null); }
+      else setToast(r.error || "Could not publish");
+    } catch { setToast("Could not publish"); }
+    finally { setPubBusy(false); }
+  };
+
+  // keyboard shortcuts: R = surprise me, S = shuffle seed (ignored while typing)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      const k = e.key.toLowerCase();
+      if (k === "r") { e.preventDefault(); surprise(); }
+      else if (k === "s") { e.preventDefault(); setParams((p) => ({ ...p, seed: randSeed() })); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [surprise]);
+
   const downloadCurrent = useCallback(async () => {
     setBusy(true);
     try { await exportWallpaper(params, device, format); } finally { setBusy(false); }
@@ -74,11 +153,10 @@ export default function Studio() {
   const downloadPack = useCallback(async () => {
     setBusy(true);
     try {
-      for (const d of DEVICES) {
-        await exportWallpaper(params, d, format);
-        await new Promise((r) => setTimeout(r, 400));
-      }
-    } finally { setBusy(false); }
+      const { exportDevicesZip } = await import("@/lib/exporter");
+      const r = await exportDevicesZip(params, DEVICES, format);
+      setToast(r.skipped.length ? `Zipped ${r.ok} sizes. ${r.skipped.join(", ")} is too big for a zip; pick it and download on its own.` : `Zipped all ${r.ok} sizes`);
+    } catch { setToast("Could not build the pack"); } finally { setBusy(false); }
   }, [params, format]);
 
   const palette = PALETTES.find((p) => p.id === params.paletteId) ?? PALETTES[0];
@@ -87,6 +165,7 @@ export default function Studio() {
 
   return (
     <>
+      <VibeBox onPick={(p) => { setParams(p); setRemixOf(null); setToast("Loaded into the studio"); document.getElementById("generator")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
       <div className="gen" id="generator">
         {/* ---- controls ---- */}
         <div className="panel glass gen-panel" role="group" aria-label="Generator controls">
@@ -159,13 +238,23 @@ export default function Studio() {
               onChange={(e) => set("grainOn", e.target.checked)} /> Film grain</label>
             <label className="toggle"><input type="checkbox" checked={reduced}
               onChange={(e) => setReduced(e.target.checked)} /> Reduce motion</label>
+            <label className="toggle"><input type="checkbox" checked={lockPreview}
+              onChange={(e) => setLockPreview(e.target.checked)} /> Lock-screen preview</label>
           </div>
         </div>
 
         {/* ---- preview ---- */}
         <div className="preview-wrap">
           <div className="stage">
-            <canvas ref={canvasRef} className="preview" aria-label="Wallpaper preview" />
+            <div className="lock-wrap">
+              <canvas ref={canvasRef} className="preview" aria-label="Wallpaper preview" />
+              {lockPreview && now && (
+                <div className={`lock-ui ${device.h > device.w ? "is-tall" : "is-wide"}`} aria-hidden="true">
+                  <div className="lock-date">{now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</div>
+                  <div className="lock-time">{now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })}</div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="devrow">
             {DEVICES.map((d) => (
@@ -185,16 +274,46 @@ export default function Studio() {
           <button className="btn grad" onClick={downloadCurrent} disabled={busy}>
             {busy ? "Rendering…" : `Download · ${format.toUpperCase()}`}
           </button>
-          <button className="btn ghost" onClick={downloadPack} disabled={busy}>Device pack · 4</button>
-          <button className="btn ghost" onClick={() => set("seed", randSeed())}>Shuffle seed</button>
-          <div className="hint">{device.name} · {device.w}×{device.h}, rendered full-res in your browser. Nothing is uploaded.</div>
+          <button className="btn ghost" onClick={downloadPack} disabled={busy}>Device pack · {DEVICES.length}</button>
+          <div className="act-row">
+            <button className={`btn ghost sm save-btn ${saved ? "on" : ""}`} onClick={onSave} aria-pressed={saved}>
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.5 1.1 5.2 3 1.7-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>
+              {saved ? "Saved" : "Save"}
+            </button>
+            <button className="btn ghost sm" onClick={onShare}>
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              Share
+            </button>
+            <button className="btn ghost sm" onClick={() => setPubOpen((v) => !v)} aria-expanded={pubOpen} aria-controls="pub-form">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M4 20h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Publish
+            </button>
+          </div>
+          {pubOpen && (
+            <form id="pub-form" className="pub-form" onSubmit={onPublish}>
+              <label className="lbl" htmlFor="pub-title">Title for the community gallery</label>
+              <input id="pub-title" type="text" maxLength={40} value={pubTitle} onChange={(e) => setPubTitle(e.target.value)} placeholder="e.g. Midnight petals" autoFocus />
+              <div className="row">
+                <button type="submit" className="btn grad sm" disabled={pubBusy}>{pubBusy ? "Publishing…" : "Publish"}</button>
+                <button type="button" className="btn ghost sm" onClick={() => setPubOpen(false)}>Cancel</button>
+              </div>
+              <div className="hint">Only the settings are shared (style, palette, seed), never a photo you used.</div>
+              {remixOf && <div className="hint pub-remix">Publishes as a remix, linked to the original. <button type="button" className="linkbtn" onClick={() => setRemixOf(null)}>Publish as new instead</button></div>}
+            </form>
+          )}
+          <button className="btn ghost" onClick={surprise}>Surprise me <kbd>R</kbd></button>
+          <button className="btn ghost" onClick={() => set("seed", randSeed())}>Shuffle seed <kbd>S</kbd></button>
+          <div className="hint">{device.name} · {device.w}×{device.h}, rendered full-res in your browser.</div>
         </div>
       </div>
+
+      <StudioExtras params={params} notify={setToast} />
 
       <div style={{ marginTop: "clamp(60px,8vw,110px)" }}>
         <BatchTen base={params} device={device} format={format}
           onPick={(p) => setParams((prev) => ({ ...prev, paletteId: p.paletteId, seed: p.seed }))} />
       </div>
+      <div className="toast" role="status" aria-live="polite">{toast && <span key={toast}>{toast}</span>}</div>
     </>
   );
 }

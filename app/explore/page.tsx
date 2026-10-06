@@ -92,6 +92,22 @@ export default function Explore() {
   const [filter, setFilter] = useState<StyleId | "all">("all");
   const [mode, setMode] = useState<Mode>("trending");
   const [query, setQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia("(max-width: 640px)");
+    const on = () => setNarrow(m.matches);
+    on(); m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  const chipLimit = narrow ? 5 : 9;
+  const chipStyles = useMemo(() => {
+    if (showAll) return STYLES;
+    const head = STYLES.slice(0, chipLimit);
+    const sel = STYLES.find((s) => s.id === filter);
+    return sel && !head.includes(sel) ? [...head, sel] : head;
+  }, [showAll, chipLimit, filter]);
+  const hiddenCount = STYLES.length - chipStyles.length;
   const [visible, setVisible] = useState(PAGE);
   const [busy, setBusy] = useState(false);
   const [prog, setProg] = useState(0);
@@ -152,19 +168,25 @@ export default function Explore() {
                 <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search styles & palettes…" aria-label="Search wallpapers" />
                 {query && <button className="ex-clear" onClick={() => setQuery("")} aria-label="Clear search">×</button>}
               </label>
-              <div className="ex-modes" role="tablist" aria-label="Sort">
+              <div className="ex-modes" role="group" aria-label="Sort">
                 {(["trending", "recent", "all"] as Mode[]).map((m) => (
-                  <button key={m} role="tab" aria-selected={mode === m} className={`ex-mode ${mode === m ? "active" : ""}`} onClick={() => setMode(m)}>
+                  <button key={m} aria-pressed={mode === m} className={`ex-mode ${mode === m ? "active" : ""}`} onClick={() => setMode(m)}>
                     {m === "trending" ? "Trending" : m === "recent" ? "Recent" : "All"}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="ex-chips">
+            <div className="ex-chips" id="ex-chips">
               <button className="chip" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All styles</button>
-              {STYLES.map((s) => (
+              {chipStyles.map((s) => (
                 <button key={s.id} className="chip" aria-pressed={filter === s.id} onClick={() => setFilter(s.id)}>{s.name}</button>
               ))}
+              {(showAll || hiddenCount > 0) && (
+                <button className="chip chip-more" aria-expanded={showAll} aria-controls="ex-chips" onClick={() => setShowAll((v) => !v)}>
+                  {showAll ? "Show less" : `Show more (+${hiddenCount})`}
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true" style={{ transform: showAll ? "rotate(180deg)" : "none" }}><polyline points="6 9 12 15 18 9" /></svg>
+                </button>
+              )}
             </div>
             <div className="row">
               <span className="ex-count">{shown.length} wallpaper{shown.length === 1 ? "" : "s"}</span>

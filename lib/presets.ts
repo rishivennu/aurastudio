@@ -49,7 +49,7 @@ export const PALETTES: Palette[] = [
   { id: "orchid-sea", name: "Orchid Sea", colors: ["#5cc8c3", "#2f92bc", "#723097"] },
 ];
 
-export type StyleId = "soft-linear" | "mesh" | "ridges" | "dotfield" | "liquid" | "fluted" | "aurora" | "meshgrid" | "topo" | "plasma" | "bokeh" | "sunburst" | "voronoi" | "metaballs" | "marble" | "silk" | "iridescent" | "vortex" | "halftone" | "nebula" | "ripple" | "mosaic" | "kaleido";
+export type StyleId = "soft-linear" | "mesh" | "ridges" | "dotfield" | "liquid" | "fluted" | "aurora" | "meshgrid" | "topo" | "plasma" | "bokeh" | "sunburst" | "voronoi" | "metaballs" | "marble" | "silk" | "iridescent" | "vortex" | "halftone" | "nebula" | "ripple" | "mosaic" | "kaleido" | "horizon" | "ribbon" | "panes" | "arches" | "bloom" | "flux";
 
 export type StylePreset = {
   id: StyleId;
@@ -61,7 +61,7 @@ export type StylePreset = {
   blobSize: [number, number];    // fraction of max(w,h)
   blend: GlobalCompositeOperation;
   grain: number;                 // 0..1
-  layout: "centered" | "scattered" | "verticalBands" | "ridges" | "dotfield" | "liquid" | "fluted" | "aurora" | "meshgrid" | "topo" | "plasma" | "bokeh" | "sunburst" | "voronoi" | "metaballs" | "marble" | "silk" | "iridescent" | "vortex" | "halftone" | "nebula" | "ripple" | "mosaic" | "kaleido";
+  layout: "centered" | "scattered" | "verticalBands" | "ridges" | "dotfield" | "liquid" | "fluted" | "aurora" | "meshgrid" | "topo" | "plasma" | "bokeh" | "sunburst" | "voronoi" | "metaballs" | "marble" | "silk" | "iridescent" | "vortex" | "halftone" | "nebula" | "ripple" | "mosaic" | "kaleido" | "horizon" | "ribbon" | "panes" | "arches" | "bloom" | "flux";
 };
 
 export const STYLES: StylePreset[] = [
@@ -180,6 +180,36 @@ export const STYLES: StylePreset[] = [
     background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
     blend: "source-over", grain: 0, layout: "kaleido",
   },
+  {
+    id: "horizon", name: "Horizon", desc: "A soft, grainy sunset gradient on a gentle diagonal.",
+    background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
+    blend: "source-over", grain: 0.4, layout: "horizon",
+  },
+  {
+    id: "ribbon", name: "Ribbon", desc: "An iridescent liquid-metal ribbon, finely line-etched, on dark.",
+    background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
+    blend: "source-over", grain: 0, layout: "ribbon",
+  },
+  {
+    id: "panes", name: "Panes", desc: "A stack of translucent glass capsules with gradient sheen.",
+    background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
+    blend: "source-over", grain: 0, layout: "panes",
+  },
+  {
+    id: "arches", name: "Arches", desc: "Nested concentric stadium bands, two mirrored.",
+    background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
+    blend: "source-over", grain: 0, layout: "arches",
+  },
+  {
+    id: "bloom", name: "Bloom", desc: "A symmetric neon light-form — four glowing petals on black.",
+    background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
+    blend: "source-over", grain: 0, layout: "bloom",
+  },
+  {
+    id: "flux", name: "Flux", desc: "An electric fibrous burst radiating from an off-centre focus.",
+    background: "firstColor", blobCount: [0, 0], blobSize: [0, 0],
+    blend: "source-over", grain: 0, layout: "flux",
+  },
 ];
 
 export const DEVICES: { id: string; name: string; w: number; h: number; label: string }[] = [
@@ -191,4 +221,20 @@ export const DEVICES: { id: string; name: string; w: number; h: number; label: s
   { id: "ipadpro", name: "iPad Pro",         w: 2732, h: 2048, label: "4:3" },
   { id: "square",  name: "Square",           w: 2048, h: 2048, label: "1:1" },
   { id: "watch",   name: "Apple Watch",      w: 410,  h: 502,  label: "Ultra" },
+  { id: "wearos",  name: "Wear OS round",    w: 454,  h: 454,  label: "Round" },
+  { id: "steamdeck", name: "Steam Deck",     w: 1280, h: 800,  label: "16:10" },
+  { id: "kindle",  name: "Kindle Paperwhite", w: 1236, h: 1648, label: "3:4" },
+  { id: "tv",      name: "TV 8K",            w: 7680, h: 4320, label: "16:9" },
+  { id: "pixel",   name: "Pixel / Android",  w: 1080, h: 2400, label: "20:9" },
+  { id: "macbook", name: "MacBook Pro 14",   w: 3024, h: 1964, label: "16:10" },
+];
+
+// Sizes beyond devices: profile banners, headers, call backgrounds, stories.
+export const SOCIAL: { id: string; name: string; w: number; h: number; label: string }[] = [
+  { id: "youtube",   name: "YouTube banner",  w: 2560, h: 1440, label: "Channel art" },
+  { id: "x-header",  name: "X header",        w: 1500, h: 500,  label: "3:1" },
+  { id: "linkedin",  name: "LinkedIn banner", w: 1584, h: 396,  label: "4:1" },
+  { id: "zoom",      name: "Zoom / Teams",    w: 1920, h: 1080, label: "Call background" },
+  { id: "ig-story",  name: "Instagram story", w: 1080, h: 1920, label: "9:16" },
+  { id: "discord",   name: "Discord banner",  w: 960,  h: 540,  label: "Server" },
 ];
